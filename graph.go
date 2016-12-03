@@ -7,6 +7,15 @@ type Graph struct {
 	IndirectEdges map[string]*Edge `json:"indirectEdges"`
 }
 
+// NewEmptyGraph instanciates
+func NewEmptyGraph() *Graph {
+	return &Graph{
+		Nodes:         map[string]*Node{},
+		DirectEdges:   map[string]*Edge{},
+		IndirectEdges: map[string]*Edge{},
+	}
+}
+
 // GetNode finds a node given its key
 func (graph *Graph) GetNode(key string) (*Node, error) {
 	node, ok := graph.Nodes[key]
