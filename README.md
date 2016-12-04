@@ -1,3 +1,3 @@
 # Hippoai / Graphgo
 
-Implements a graph data structure.
+Implements a directed graph data structure.
