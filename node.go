@@ -47,3 +47,59 @@ func (node *Node) Get(key string) (interface{}, error) {
 
 	return value, nil
 }
+
+// OutE returns all the outgoing edges with given label
+func (node *Node) OutE(label string) []*Edge {
+
+	result := []*Edge{}
+
+	for _, edge := range *node.Out {
+		if edge.Label == label {
+			result = append(result, edge)
+		}
+	}
+
+	return result
+}
+
+// InE returns all the ingoing edges with given label
+func (node *Node) InE(label string) []*Edge {
+
+	result := []*Edge{}
+
+	for _, edge := range *node.In {
+		if edge.Label == label {
+			result = append(result, edge)
+		}
+	}
+
+	return result
+}
+
+// Out returns all the outgoing nodes with given label
+func (node *Node) OutV(label string) []*Node {
+
+	result := []*Node{}
+
+	for _, edge := range *node.Out {
+		if edge.Label == label {
+			result = append(result, edge.EndNode)
+		}
+	}
+
+	return result
+}
+
+// In returns all the ingoing nodes with given label
+func (node *Node) InV(label string) []*Node {
+
+	result := []*Node{}
+
+	for _, edge := range *node.In {
+		if edge.Label == label {
+			result = append(result, edge.StartNode)
+		}
+	}
+
+	return result
+}
