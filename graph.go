@@ -25,12 +25,14 @@ func (graph *Graph) GetNode(key string) (*Node, error) {
 
 // MergeNode adds a node to the graph if it does not exist, or merges its properties ottherwise
 func (graph *Graph) MergeNode(key string, props *map[string]interface{}) (*Node, error) {
+
 	node, err := graph.GetNode(key)
 
 	// If the node does not exist
 	if err != nil {
 		node = NewNode(key, props)
 		graph.Nodes[key] = node
+
 		return node, nil
 	}
 
@@ -56,15 +58,24 @@ func (graph *Graph) GetEdge(key string) (*Edge, error) {
 }
 
 // MergeEdge adds an edge to the graph if it does not exist, merges its properties otherwise
-func (graph *Graph) MergeEdge(key, label string, startNode, endNode *Node, props *map[string]interface{}) (*Edge, error) {
+func (graph *Graph) MergeEdge(key, label string, start, end string, props *map[string]interface{}) (*Edge, error) {
 	edge, err := graph.GetEdge(key)
 
 	// If the edge does not exist
 	if err != nil {
-		edge = NewEdge(key, label, startNode, endNode, props)
+		edge = NewEdge(key, label, start, end, props)
 		graph.Edges[key] = edge
-		startNode.AddOutEdge(edge)
-		endNode.AddInEdge(edge)
+
+		startNode, err := graph.GetNode(start)
+		if err != nil {
+			startNode.AddOutEdge(edge.Key, label)
+		}
+
+		endNode, err := graph.GetNode(end)
+		if err != nil {
+			endNode.AddInEdge(edge.Key, label)
+		}
+
 		return edge, nil
 	}
 

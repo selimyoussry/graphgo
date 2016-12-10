@@ -2,25 +2,21 @@ package graphgo
 
 // Edge has a unique key, properties, start and end node
 type Edge struct {
-	Key       string                  `json:"key"`
-	Label     string                  `json:"label"`
-	Props     *map[string]interface{} `json:"props"`
-	StartNode *Node                   `json:"-"`
-	EndNode   *Node                   `json:"-"`
-	Start     string                  `json:"start"`
-	End       string                  `json:"end"`
+	Key   string                  `json:"key"`
+	Label string                  `json:"label"`
+	Props *map[string]interface{} `json:"props"`
+	Start string                  `json:"start"`
+	End   string                  `json:"end"`
 }
 
 // NewEdge instanciates
-func NewEdge(key, label string, startNode, endNode *Node, props *map[string]interface{}) *Edge {
+func NewEdge(key, label string, start, end string, props *map[string]interface{}) *Edge {
 	return &Edge{
-		Key:       key,
-		Label:     label,
-		Props:     props,
-		StartNode: startNode,
-		EndNode:   startNode,
-		Start:     startNode.Key,
-		End:       endNode.Key,
+		Key:   key,
+		Label: label,
+		Props: props,
+		Start: start,
+		End:   end,
 	}
 }
 
