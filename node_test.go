@@ -6,7 +6,7 @@ func TestAddNode(t *testing.T) {
 
 	g := NewEmptyGraph()
 
-	nodeProps := &map[string]interface{}{
+	nodeProps := map[string]interface{}{
 		"prop1": 120,
 		"prop2": "hello",
 	}
@@ -17,8 +17,8 @@ func TestAddNode(t *testing.T) {
 		t.Errorf(err.Error())
 	}
 
-	for k, v := range *node.Props {
-		if v != (*nodeProps)[k] {
+	for k, v := range node.Props {
+		if v != nodeProps[k] {
 			t.Errorf("Did not match %s", k)
 		}
 	}

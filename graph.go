@@ -23,8 +23,17 @@ func (graph *Graph) GetNode(key string) (*Node, error) {
 	return node, nil
 }
 
+// GetNodeProp finds a node prop
+func (graph *Graph) GetNodeProp(key, prop string) (interface{}, error) {
+	node, err := graph.GetNode(key)
+	if err != nil {
+		return "", err
+	}
+	return node.Get(prop)
+}
+
 // MergeNode adds a node to the graph if it does not exist, or merges its properties ottherwise
-func (graph *Graph) MergeNode(key string, props *map[string]interface{}) (*Node, error) {
+func (graph *Graph) MergeNode(key string, props map[string]interface{}) (*Node, error) {
 
 	node, err := graph.GetNode(key)
 
@@ -41,7 +50,7 @@ func (graph *Graph) MergeNode(key string, props *map[string]interface{}) (*Node,
 	}
 
 	// Otherwise, the node does not exist yet, merge the properties
-	for k, v := range *props {
+	for k, v := range props {
 		node.SetProperty(k, v)
 	}
 
@@ -57,24 +66,36 @@ func (graph *Graph) GetEdge(key string) (*Edge, error) {
 	return edge, nil
 }
 
-// MergeEdge adds an edge to the graph if it does not exist, merges its properties otherwise
-func (graph *Graph) MergeEdge(key, label string, start, end string, props *map[string]interface{}) (*Edge, error) {
+// GetEdgeProp finds a node prop
+func (graph *Graph) GetEdgeProp(key, prop string) (interface{}, error) {
 	edge, err := graph.GetEdge(key)
+	if err != nil {
+		return "", err
+	}
+	return edge.Get(prop)
+}
+
+// MergeEdge adds an edge to the graph if it does not exist, merges its properties otherwise
+func (graph *Graph) MergeEdge(edgeKey, label string, start, end string, props map[string]interface{}) (*Edge, error) {
+	edge, err := graph.GetEdge(edgeKey)
 
 	// If the edge does not exist
 	if err != nil {
-		edge = NewEdge(key, label, start, end, props)
-		graph.Edges[key] = edge
+		edge = NewEdge(edgeKey, label, start, end, props)
 
 		startNode, err := graph.GetNode(start)
 		if err != nil {
-			startNode.AddOutEdge(edge.Key, label)
+			return nil, errNodeNotFound(start)
 		}
 
 		endNode, err := graph.GetNode(end)
 		if err != nil {
-			endNode.AddInEdge(edge.Key, label)
+			return nil, errNodeNotFound(end)
 		}
+
+		graph.Edges[edgeKey] = edge
+		startNode.AddOutEdge(edgeKey, label)
+		endNode.AddInEdge(edgeKey, label)
 
 		return edge, nil
 	}
@@ -84,7 +105,7 @@ func (graph *Graph) MergeEdge(key, label string, start, end string, props *map[s
 	}
 
 	// Otherwise modify existing edge
-	for k, v := range *props {
+	for k, v := range props {
 		edge.SetProperty(k, v)
 	}
 
