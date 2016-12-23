@@ -26,15 +26,17 @@ func TestQuery(t *testing.T) {
 	})
 
 	g.MergeNode("celebrity.travolta", map[string]interface{}{
-		"name":    "john travolta",
-		"twitter": "@travolta",
-		"age":     60,
+		"name":        "john travolta",
+		"twitter":     "@travolta",
+		"nationality": "usa",
+		"age":         60,
 	})
 
 	g.MergeNode("celebrity.obama", map[string]interface{}{
-		"name":    "barack obama",
-		"twitter": "@potus",
-		"age":     55,
+		"name":        "barack obama",
+		"twitter":     "@potus",
+		"nationality": "usa",
+		"age":         55,
 	})
 
 	g.MergeNode("celebrity.bocelli", map[string]interface{}{
@@ -54,6 +56,7 @@ func TestQuery(t *testing.T) {
 	g.MergeEdge("john.follows.obama", "FOLLOWS", "employee.john", "celebrity.obama", map[string]interface{}{})
 
 	g.MergeEdge("patrick.follows.bocelli", "FOLLOWS", "employee.patrick", "celebrity.bocelli", map[string]interface{}{})
+	g.MergeEdge("patrick.follows.obama", "FOLLOWS", "employee.patrick", "celebrity.obama", map[string]interface{}{})
 
 	// Query
 	// We want to know all the followed celebrities in the company
@@ -61,28 +64,31 @@ func TestQuery(t *testing.T) {
 	result := query.
 		In("WORKS_IN").
 		Out("FOLLOWS").
-		Get("followed_celebrities", "name", "twitter").
+		Save("name", "twitter").
 		Cache
 
 	t.Log(PrettyPrint(result))
 
 	// Now get all the company's followed celebrities
 	result = NewQuery(g, "company.ups").
-		Deepen("followed_celebrities").
-		In("WORKS_IN").Out("FOLLOWS").Get("celebrity", "name").
-		Flatten(true).
+		Deepen().
+		In("WORKS_IN").
+		Out("FOLLOWS").
+		Save("name").
+		Flatten().
 		Cache
 
 	t.Log(PrettyPrint(result))
 
-	// For every company, get all the employees following Bocelli
+	// For every company, get all the employees following an American celebrity
+	// and return their company as well (just for the sake of multiple successive deepen)
 	f := func(q *Query) bool {
 		for _, node := range q.result {
-			name, err := node.Get("name")
+			nationality, err := node.Get("nationality")
 			if err != nil {
 				continue
 			}
-			if name == "andrea bocelli" {
+			if nationality == "usa" {
 				return true
 			}
 		}
@@ -91,11 +97,18 @@ func TestQuery(t *testing.T) {
 
 	result = NewQuery(g, "company.ups").
 		In("WORKS_IN").
-		Deepen("employees_following_bocelli").
+		Deepen().
 		Out("FOLLOWS").
 		DeepFilter(f).
-		Flatten(true).
-		Get("employees", "name").
+		Save("name", "twitter").
+		DeepSave("celebrities").
+		Flatten().
+		Save("name", "age").
+		Deepen().
+		Out("WORKS_IN").
+		Save("name").
+		DeepSave("companies").
+		Flatten().
 		Cache
 
 	t.Log(PrettyPrint(result))
