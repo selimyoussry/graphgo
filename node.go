@@ -47,3 +47,28 @@ func (node *Node) Get(key string) (interface{}, error) {
 
 	return value, nil
 }
+
+// Copy returns a fresh node with same properties
+func (node *Node) Copy() *Node {
+	props := map[string]interface{}{}
+	for key, value := range node.Props {
+		props[key] = value
+	}
+
+	out := map[string]string{}
+	for key, value := range out {
+		out[key] = value
+	}
+
+	in := map[string]string{}
+	for key, value := range out {
+		in[key] = value
+	}
+
+	return &Node{
+		Key:   node.Key,
+		Props: props,
+		Out:   out,
+		In:    in,
+	}
+}
