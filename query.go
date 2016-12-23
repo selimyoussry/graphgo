@@ -6,6 +6,9 @@ type Query struct {
 	Graph  *Graph
 	result map[string]*Node
 	Cache  map[string]interface{}
+
+	Key     string
+	Queries map[string]*Query
 }
 
 // NewEmptyQuery instanciates
@@ -14,6 +17,9 @@ func NewEmptyQuery() *Query {
 		Graph:  nil,
 		result: map[string]*Node{},
 		Cache:  map[string]interface{}{},
+
+		Key:     "",
+		Queries: map[string]*Query{},
 	}
 }
 
@@ -34,12 +40,48 @@ func NewQuery(g *Graph, starts ...string) *Query {
 		Graph:  g,
 		result: result,
 		Cache:  map[string]interface{}{},
+
+		Key:     "",
+		Queries: map[string]*Query{},
 	}
 
 }
 
+// IsDeep checks if this is a nested query
+func (q *Query) IsDeep() bool {
+	if q.Queries == nil {
+		return false
+	}
+	if len(q.Queries) == 0 {
+		return false
+	}
+	return true
+}
+
+// IsDoubleDeep returns true if depth >= 2
+func (q *Query) IsDoubleDeep() bool {
+	if !q.IsDeep() {
+		return false
+	}
+
+	for _, nestedQuery := range q.Queries {
+		return nestedQuery.IsDeep()
+	}
+
+	return false
+}
+
 // Out returns outgoing nodes to this graph
 func (q *Query) Out(label string) *Query {
+
+	// Deep Calls
+	if q.IsDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.Out(label)
+		}
+		return q
+	}
+
 	newResult := map[string]*Node{}
 
 	// Loop over all the nodes in the current result
@@ -76,6 +118,15 @@ func (q *Query) Out(label string) *Query {
 
 // In returns outgoing nodes to this graph
 func (q *Query) In(label string) *Query {
+
+	// Deep Calls
+	if q.IsDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.In(label)
+		}
+		return q
+	}
+
 	newResult := map[string]*Node{}
 
 	// Loop over all the nodes in the current result
@@ -113,6 +164,14 @@ func (q *Query) In(label string) *Query {
 // FilterNodes based on a predicate on their properties
 func (q *Query) FilterNodes(predicate func(map[string]interface{}) bool) *Query {
 
+	// Deep Calls
+	if q.IsDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.FilterNodes(predicate)
+		}
+		return q
+	}
+
 	newResult := map[string]*Node{}
 
 	// Loop over all the nodes in the current result
@@ -132,6 +191,15 @@ func (q *Query) FilterNodes(predicate func(map[string]interface{}) bool) *Query 
 // Flatten function
 // Get an iterable of all the keys, per node
 func (q *Query) Get(name string, keys ...string) *Query {
+
+	// Deep Calls
+	if q.IsDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.Get(name, keys...)
+		}
+		return q
+	}
+
 	out := map[string](map[string]interface{}){}
 
 	// Loop over every node in the result
@@ -158,6 +226,14 @@ func (q *Query) Get(name string, keys ...string) *Query {
 // GetOne returns a map of the keys and their values
 // works ONLY if there is only one node in the result
 func (q *Query) GetOne(name string, keys ...string) *Query {
+	// Deep Calls
+	if q.IsDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.GetOne(name, keys...)
+		}
+		return q
+	}
+
 	// If the result holds more than one node, throw error
 	if len(q.result) != 1 {
 		return q
@@ -197,25 +273,94 @@ func (q *Query) GetOne(name string, keys ...string) *Query {
 // }
 
 // DeepenQuery creates a new DeepQuery, from every node of a given Query
-func (query *Query) Deepen(key string) *DeepQuery {
+func (q *Query) Deepen(key string) *Query {
+	// Deep Calls
+	if q.IsDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.Deepen(key)
+		}
+		return q
+	}
 
-	b := map[string]*Query{}
-	for _, r := range query.result {
+	queries := map[string]*Query{}
+	for _, r := range q.result {
 
 		// Use the node key as a query key
-		b[r.Key] = NewQuery(query.Graph, r.Key)
+		queries[r.Key] = NewQuery(q.Graph, r.Key)
 
 	}
 
-	return &DeepQuery{
-		Queries:       b,
-		Key:           key,
-		InitialResult: query.result,
+	q.Key = key
+	q.Queries = queries
+	return q
+}
+
+// Flatten flattens a query to the lower level
+func (q *Query) Flatten(saveCache bool) *Query {
+
+	// Nothing to flatten
+	if !q.IsDeep() {
+		return q
 	}
+
+	// If it's actually too deep, we keep going
+	if q.IsDoubleDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.Flatten(saveCache)
+		}
+		return q
+	}
+
+	// Otherwise, this is the level before the lowest
+	// We can flatten the cache
+	if saveCache {
+		c := map[string](map[string]interface{}){}
+		for nodeKey, nestedQuery := range q.Queries {
+			c[nodeKey] = nestedQuery.Cache
+		}
+		q.Cache[q.Key] = c
+	}
+
+	q.Key = ""
+	q.Queries = map[string]*Query{}
+	return q
 
 }
 
-// Flatten returns the cache
-func (q *Query) Flatten() map[string]interface{} {
-	return q.Cache
+// DeepFilter
+func (q *Query) DeepFilter(keepQuery func(*Query) bool) *Query {
+
+	// Nothing to flatten
+	if !q.IsDeep() {
+		return q
+	}
+
+	// If it's actually too deep, we keep going
+	if q.IsDoubleDeep() {
+		for _, nestedQuery := range q.Queries {
+			nestedQuery.DeepFilter(keepQuery)
+		}
+		return q
+	}
+
+	// Otherwise, this is the level before the lowest
+	// We can flatten the cache
+
+	nodesToDiscard := []string{}
+	for nodeKey, nestedQuery := range q.Queries {
+
+		// if we need to filter this
+		if !keepQuery(nestedQuery) {
+			nodesToDiscard = append(nodesToDiscard, nodeKey)
+		}
+
+	}
+
+	// Delete the nodes that have been filtered
+	for _, nodeKey := range nodesToDiscard {
+		delete(q.result, nodeKey)
+		delete(q.Queries, nodeKey)
+	}
+
+	return q
 }

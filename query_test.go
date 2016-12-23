@@ -62,21 +62,43 @@ func TestQuery(t *testing.T) {
 		In("WORKS_IN").
 		Out("FOLLOWS").
 		Get("followed_celebrities", "name", "twitter").
-		Flatten()
+		Cache
 
 	t.Log(PrettyPrint(result))
 
 	// Now get all the company's followed celebrities
 	result = NewQuery(g, "company.ups").
-		Deepen("employees_following_bocelli").
+		Deepen("followed_celebrities").
 		In("WORKS_IN").Out("FOLLOWS").Get("celebrity", "name").
-		Flatten().
-		Flatten()
+		Flatten(true).
+		Cache
 
 	t.Log(PrettyPrint(result))
 
 	// For every company, get all the employees following Bocelli
-	// TO DO
+	f := func(q *Query) bool {
+		for _, node := range q.result {
+			name, err := node.Get("name")
+			if err != nil {
+				continue
+			}
+			if name == "andrea bocelli" {
+				return true
+			}
+		}
+		return false
+	}
+
+	result = NewQuery(g, "company.ups").
+		In("WORKS_IN").
+		Deepen("employees_following_bocelli").
+		Out("FOLLOWS").
+		DeepFilter(f).
+		Flatten(true).
+		Get("employees", "name").
+		Cache
+
+	t.Log(PrettyPrint(result))
 
 	// Print graph
 	// gBytes, _ := json.MarshalIndent(g, "", "  ")
