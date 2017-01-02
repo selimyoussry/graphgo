@@ -13,10 +13,34 @@ func main() {
 	g := build()
 	query := graphgo.NewQuery(g, "company.ups")
 
-	exists := func(q *graphgo.Query) bool {
+	exists := func(q *graphgo.Query, path []*graphgo.Step) bool {
 		return q.Size() > 0
 	}
-	log.Println(exists)
+
+	hasSameCompanyName := func(q *graphgo.Query, path []*graphgo.Step) bool {
+		if q.Size() == 0 {
+			return false
+		}
+
+		company := path[0]
+		companyName, err := company.Node.Get("name")
+		if err != nil {
+			return false
+		}
+		for _, sonCompany := range q.Result() {
+			sonCompanyName, err := sonCompany.Get("name")
+			if err != nil {
+				continue
+			}
+			log.Println("Company name", companyName.(string), sonCompanyName.(string))
+			if sonCompanyName.(string) != sonCompanyName.(string) {
+				return true
+			}
+		}
+
+		return false
+
+	}
 
 	result := query.
 		Log("0. Start").
@@ -32,16 +56,16 @@ func main() {
 		Log("1.8 second depth").
 		Out("WORKS_IN", false). // get companies they work for
 		Log("1.9 second depth > companies").
-		DeepFilter(exists). // keep only sons who work for a company
+		DeepFilter(hasSameCompanyName). // keep only sons who work for a company
 		Log("1.95 second filter").
 		Flatten().
+		Log("1.96 Re-flatten").
 		Save("name::sonName"). // son name
 		DeepSave("sons").
 		Log("2. Sons").
 		Flatten().
 		Log("3. Flattened").
-		Save("name::fatherName").
-		Out("WORKS_IN", true).
+		Save("name::fatherName", "age").
 		Log("1.5 Father name").
 		Return()
 
