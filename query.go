@@ -13,6 +13,7 @@ type Query struct {
 	Graph  *Graph
 	result map[string]*Node
 	Cache  map[string](map[string]interface{})
+	Path   QueryPath
 
 	Queries map[string]*Query
 }
@@ -26,6 +27,34 @@ func NewEmptyQuery() *Query {
 
 		Queries: map[string]*Query{},
 	}
+}
+
+type QueryPath []*Step
+
+type NodeEdge struct {
+	Node *Node
+	Edge *Edge
+}
+
+type Step struct {
+	Nodes        []*NodeEdge
+	Relationship string
+}
+
+func (step *Step) AddNodeEdge(node *Node, edge *Edge) {
+	step.Nodes = append(step.Nodes, &NodeEdge{
+		Node: node,
+		Edge: edge,
+	})
+}
+
+func NewPath() *QueryPath {
+	return &QueryPath{}
+}
+
+func (qp *QueryPath) AddStep(step *Step) *QueryPath {
+	newQueryPath := append(*qp, step)
+	return &newQueryPath
 }
 
 // RenameKey returns the wanted key
@@ -100,6 +129,7 @@ func (q *Query) Out(label string) *Query {
 	newResult := map[string]*Node{}
 
 	// Loop over all the nodes in the current result
+	step := &Step{Relationship: label}
 	for _, node := range q.result {
 
 		// Loop over all relationships for this node
@@ -118,6 +148,7 @@ func (q *Query) Out(label string) *Query {
 					continue
 				}
 
+				step.AddNodeEdge(endNode, edge)
 				newResult[endNode.Key] = endNode
 
 			}
@@ -126,6 +157,7 @@ func (q *Query) Out(label string) *Query {
 
 	}
 
+	q.Path.AddStep(step)
 	q.result = newResult
 
 	return q
