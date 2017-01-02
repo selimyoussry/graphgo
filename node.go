@@ -41,7 +41,7 @@ func (node *Node) AddInEdge(edge, label string) {
 }
 
 // Get a property
-func (node *Node) Get(key string) (interface{}, *goerr.Err) {
+func (node *Node) Get(key string) (interface{}, error) {
 	value, ok := node.Props[key]
 	if !ok {
 		return nil, errorNodePropNotFound(node.Key, key)
@@ -76,9 +76,9 @@ func (node *Node) Copy() *Node {
 }
 
 // InE returns the incoming edges
-func (node *Node) InE(graph *Graph, label string) (map[string]*Edge, *goerr.Err) {
+func (node *Node) InE(graph IGraph, label string) (map[string]IEdge, error) {
 
-	result := map[string]*Edge{}
+	result := map[string]IEdge{}
 	missingEdges := []string{}
 
 	// Loop over the edges
@@ -93,7 +93,7 @@ func (node *Node) InE(graph *Graph, label string) (map[string]*Edge, *goerr.Err)
 			continue
 		}
 
-		result[edge.Key] = edge
+		result[edge.GetKey()] = edge
 
 	}
 
@@ -109,9 +109,9 @@ func (node *Node) InE(graph *Graph, label string) (map[string]*Edge, *goerr.Err)
 }
 
 // OutE returns the outgoing edges
-func (node *Node) OutE(graph *Graph, label string) (map[string]*Edge, *goerr.Err) {
+func (node *Node) OutE(graph IGraph, label string) (map[string]IEdge, error) {
 
-	result := map[string]*Edge{}
+	result := map[string]IEdge{}
 	missingEdges := []string{}
 
 	// Loop over the edges
@@ -126,7 +126,7 @@ func (node *Node) OutE(graph *Graph, label string) (map[string]*Edge, *goerr.Err
 			continue
 		}
 
-		result[edge.Key] = edge
+		result[edge.GetKey()] = edge
 
 	}
 

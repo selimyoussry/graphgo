@@ -1,7 +1,5 @@
 package graphgo
 
-import "github.com/hippoai/goerr"
-
 // Graph stores nodes and edges in maps, using their unique keys
 type Graph struct {
 	Nodes map[string]*Node `json:"nodes"`
@@ -16,8 +14,8 @@ func NewEmptyGraph() *Graph {
 	}
 }
 
-// GetNode finds a node given its key
-func (graph *Graph) GetNode(key string) (*Node, *goerr.Err) {
+// getNode
+func (graph *Graph) getNode(key string) (*Node, error) {
 	node, ok := graph.Nodes[key]
 	if !ok {
 		return nil, errNodeNotFound(key)
@@ -25,8 +23,13 @@ func (graph *Graph) GetNode(key string) (*Node, *goerr.Err) {
 	return node, nil
 }
 
+// GetNode finds a node given its key
+func (graph *Graph) GetNode(key string) (INode, error) {
+	return graph.GetNode(key)
+}
+
 // GetNodeProp finds a node prop
-func (graph *Graph) GetNodeProp(key, prop string) (interface{}, *goerr.Err) {
+func (graph *Graph) GetNodeProp(key, prop string) (interface{}, error) {
 	node, err := graph.GetNode(key)
 	if err != nil {
 		return "", err
@@ -35,9 +38,10 @@ func (graph *Graph) GetNodeProp(key, prop string) (interface{}, *goerr.Err) {
 }
 
 // MergeNode adds a node to the graph if it does not exist, or merges its properties ottherwise
-func (graph *Graph) MergeNode(key string, props map[string]interface{}) (*Node, *goerr.Err) {
+func (graph *Graph) MergeNode(key string, props map[string]interface{}) (*Node, error) {
 
-	node, err := graph.GetNode(key)
+	inode, err := graph.GetNode(key)
+	var node *Node
 
 	// If the node does not exist
 	if err != nil {
@@ -46,6 +50,8 @@ func (graph *Graph) MergeNode(key string, props map[string]interface{}) (*Node, 
 
 		return node, nil
 	}
+
+	node = inode.(*Node)
 
 	if props == nil {
 		return node, nil
@@ -60,7 +66,7 @@ func (graph *Graph) MergeNode(key string, props map[string]interface{}) (*Node, 
 }
 
 // GetEdge gets an existing edge or returns an error
-func (graph *Graph) GetEdge(key string) (*Edge, *goerr.Err) {
+func (graph *Graph) GetEdge(key string) (IEdge, error) {
 	edge, ok := graph.Edges[key]
 	if !ok {
 		return nil, errEdgeNotFound(key)
@@ -69,7 +75,7 @@ func (graph *Graph) GetEdge(key string) (*Edge, *goerr.Err) {
 }
 
 // GetEdgeProp finds a node prop
-func (graph *Graph) GetEdgeProp(key, prop string) (interface{}, *goerr.Err) {
+func (graph *Graph) GetEdgeProp(key, prop string) (interface{}, error) {
 	edge, err := graph.GetEdge(key)
 	if err != nil {
 		return "", err
@@ -78,19 +84,20 @@ func (graph *Graph) GetEdgeProp(key, prop string) (interface{}, *goerr.Err) {
 }
 
 // MergeEdge adds an edge to the graph if it does not exist, merges its properties otherwise
-func (graph *Graph) MergeEdge(edgeKey, label string, start, end string, props map[string]interface{}) (*Edge, *goerr.Err) {
-	edge, err := graph.GetEdge(edgeKey)
+func (graph *Graph) MergeEdge(edgeKey, label string, start, end string, props map[string]interface{}) (*Edge, error) {
+	iedge, err := graph.GetEdge(edgeKey)
+	var edge *Edge
 
 	// If the edge does not exist
 	if err != nil {
 		edge = NewEdge(edgeKey, label, start, end, props)
 
-		startNode, err := graph.GetNode(start)
+		startNode, err := graph.getNode(start)
 		if err != nil {
 			return nil, errNodeNotFound(start)
 		}
 
-		endNode, err := graph.GetNode(end)
+		endNode, err := graph.getNode(end)
 		if err != nil {
 			return nil, errNodeNotFound(end)
 		}
@@ -101,6 +108,8 @@ func (graph *Graph) MergeEdge(edgeKey, label string, start, end string, props ma
 
 		return edge, nil
 	}
+
+	edge = iedge.(*Edge)
 
 	if props == nil {
 		return edge, nil

@@ -1,7 +1,5 @@
 package graphgo
 
-import "github.com/hippoai/goerr"
-
 // Edge has a unique key, properties, start and end node
 type Edge struct {
 	Key   string                 `json:"key"`
@@ -28,7 +26,7 @@ func (edge *Edge) SetProperty(key string, value interface{}) {
 }
 
 // Get a property
-func (edge *Edge) Get(key string) (interface{}, *goerr.Err) {
+func (edge *Edge) Get(key string) (interface{}, error) {
 	value, ok := edge.Props[key]
 	if !ok {
 		return nil, errorEdgePropNotFound(edge.Key, key)
@@ -38,7 +36,7 @@ func (edge *Edge) Get(key string) (interface{}, *goerr.Err) {
 }
 
 // Hop returns the other node
-func (edge *Edge) Hop(graph *Graph, key string) (*Node, *goerr.Err) {
+func (edge *Edge) Hop(graph IGraph, key string) (INode, error) {
 
 	otherNodeKey := edge.Start
 	if otherNodeKey == key {
@@ -55,12 +53,12 @@ func (edge *Edge) Hop(graph *Graph, key string) (*Node, *goerr.Err) {
 }
 
 // StartN returns the start node
-func (edge *Edge) StartN(graph *Graph) (*Node, *goerr.Err) {
+func (edge *Edge) StartN(graph IGraph) (INode, error) {
 	return edge.Hop(graph, edge.End)
 }
 
 // EndN returns the end node
-func (edge *Edge) EndN(graph *Graph) (*Node, *goerr.Err) {
+func (edge *Edge) EndN(graph IGraph) (INode, error) {
 	return edge.Hop(graph, edge.Start)
 }
 
