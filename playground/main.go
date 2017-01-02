@@ -20,7 +20,7 @@ func main() {
 
 	result := query.
 		Log("0. Start").
-		In("WORKS_IN", false). // Find the employees
+		In("WORKS_IN", true). // Find the employees
 		Log("1. Employees").
 		Deepen(). // Deep query
 		Log("1.55 Deepened").
@@ -41,6 +41,7 @@ func main() {
 		Flatten().
 		Log("3. Flattened").
 		Save("name::fatherName").
+		Out("WORKS_IN", true).
 		Log("1.5 Father name").
 		Return()
 

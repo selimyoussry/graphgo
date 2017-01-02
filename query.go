@@ -411,6 +411,9 @@ func (q *Query) Log(msgs ...string) *Query {
 	fmt.Println("> Result")
 	q.LogResult()
 
+	fmt.Println("> Path")
+	q.LogPath()
+
 	fmt.Println("--- --- ---")
 
 	return q
@@ -457,6 +460,15 @@ func (q *Query) deepLog() map[string]interface{} {
 
 // LogPath -
 func (q *Query) LogPath() *Query {
+
+	for nodeKey, onePath := range q.Path {
+		steps := []string{}
+		for _, step := range onePath {
+			steps = append(steps, fmt.Sprintf("%s (%s)", step.Node.Key, step.Edge.Key))
+		}
+
+		fmt.Printf("%s: %s \n", nodeKey, strings.Join(steps, " > "))
+	}
 
 	return q
 }
