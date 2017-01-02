@@ -20,17 +20,17 @@ func main() {
 
 	result := query.
 		Log("0. Start").
-		In("WORKS_IN"). // Find the employees
+		In("WORKS_IN", false). // Find the employees
 		Log("1. Employees").
 		Deepen(). // Deep query
 		Log("1.55 Deepened").
-		In("IS_SON_OF"). // For each employee, get the sons
+		In("IS_SON_OF", false). // For each employee, get the sons
 		Log("1.6 Sons before filtering").
 		DeepFilter(exists). // filter sons
 		Log("1.7 Filter guys who have sons").
 		Deepen(). // Deepen filter sons working at UPS
 		Log("1.8 second depth").
-		Out("WORKS_IN"). // get companies they work for
+		Out("WORKS_IN", false). // get companies they work for
 		Log("1.9 second depth > companies").
 		DeepFilter(exists). // keep only sons who work for a company
 		Log("1.95 second filter").

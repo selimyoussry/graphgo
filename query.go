@@ -13,6 +13,7 @@ type Query struct {
 	Graph  *Graph
 	result map[string]*Node
 	Cache  map[string](map[string]interface{})
+	Path   map[string][]*Step
 
 	Queries map[string]*Query
 }
@@ -23,8 +24,23 @@ func NewEmptyQuery() *Query {
 		Graph:  nil,
 		result: map[string]*Node{},
 		Cache:  map[string](map[string]interface{}){},
+		Path:   map[string][]*Step{},
 
 		Queries: map[string]*Query{},
+	}
+}
+
+// Step, how did we get there
+type Step struct {
+	Node *Node
+	Edge *Edge
+}
+
+// NewStep instanciates
+func NewStep(node *Node, edge *Edge) *Step {
+	return &Step{
+		Node: node,
+		Edge: edge,
 	}
 }
 
@@ -39,8 +55,18 @@ func RenameKey(key string) (string, string) {
 	return splitted[0], splitted[1]
 }
 
-// NewQuery instanciates
+// NewQuery
 func NewQuery(g *Graph, starts ...string) *Query {
+	path := map[string][]*Step{}
+	for _, start := range starts {
+		path[start] = []*Step{}
+	}
+
+	return NewQueryWithPath(g, path, starts...)
+}
+
+// NewQuery instanciates
+func NewQueryWithPath(g *Graph, path map[string][]*Step, starts ...string) *Query {
 	result := map[string]*Node{}
 
 	for _, start := range starts {
@@ -56,6 +82,7 @@ func NewQuery(g *Graph, starts ...string) *Query {
 		Graph:  g,
 		result: result,
 		Cache:  map[string](map[string]interface{}){},
+		Path:   path,
 
 		Queries: map[string]*Query{},
 	}
@@ -87,20 +114,21 @@ func (q *Query) IsDoubleDeep() bool {
 }
 
 // Out returns outgoing nodes to this graph
-func (q *Query) Out(label string) *Query {
+func (q *Query) Out(label string, rememberPath bool) *Query {
 
 	// Deep Calls
 	if q.IsDeep() {
 		for _, nestedQuery := range q.Queries {
-			nestedQuery.Out(label)
+			nestedQuery.Out(label, rememberPath)
 		}
 		return q
 	}
 
 	newResult := map[string]*Node{}
+	newPath := map[string][]*Step{}
 
 	// Loop over all the nodes in the current result
-	for _, node := range q.result {
+	for nodeKey, node := range q.result {
 
 		// Loop over all relationships for this node
 		for edgeKey, edgeLabel := range node.Out {
@@ -119,6 +147,11 @@ func (q *Query) Out(label string) *Query {
 				}
 
 				newResult[endNode.Key] = endNode
+				if rememberPath {
+					newPath[endNode.Key] = append(q.Path[nodeKey], NewStep(node, edge))
+				} else {
+					newPath[endNode.Key] = q.Path[nodeKey]
+				}
 
 			}
 
@@ -127,25 +160,27 @@ func (q *Query) Out(label string) *Query {
 	}
 
 	q.result = newResult
+	q.Path = newPath
 
 	return q
 }
 
 // In returns outgoing nodes to this graph
-func (q *Query) In(label string) *Query {
+func (q *Query) In(label string, rememberPath bool) *Query {
 
 	// Deep Calls
 	if q.IsDeep() {
 		for _, nestedQuery := range q.Queries {
-			nestedQuery.In(label)
+			nestedQuery.In(label, rememberPath)
 		}
 		return q
 	}
 
 	newResult := map[string]*Node{}
+	newPath := map[string][]*Step{}
 
 	// Loop over all the nodes in the current result
-	for _, node := range q.result {
+	for nodeKey, node := range q.result {
 
 		// Loop over all relationships for this node
 		for edgeKey, edgeLabel := range node.In {
@@ -164,6 +199,11 @@ func (q *Query) In(label string) *Query {
 				}
 
 				newResult[startNode.Key] = startNode
+				if rememberPath {
+					newPath[startNode.Key] = append(q.Path[nodeKey], NewStep(node, edge))
+				} else {
+					newPath[startNode.Key] = q.Path[nodeKey]
+				}
 
 			}
 
@@ -172,6 +212,7 @@ func (q *Query) In(label string) *Query {
 	}
 
 	q.result = newResult
+	q.Path = newPath
 
 	return q
 }
@@ -250,7 +291,7 @@ func (q *Query) Deepen() *Query {
 	for _, r := range q.result {
 
 		// Use the node key as a query key
-		queries[r.Key] = NewQuery(q.Graph, r.Key)
+		queries[r.Key] = NewQueryWithPath(q.Graph, q.Path, r.Key)
 
 	}
 
@@ -412,4 +453,10 @@ func (q *Query) deepLog() map[string]interface{} {
 	}
 	return result
 
+}
+
+// LogPath -
+func (q *Query) LogPath() *Query {
+
+	return q
 }
