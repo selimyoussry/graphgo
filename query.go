@@ -1,5 +1,12 @@
 package graphgo
 
+import (
+	"encoding/json"
+	"fmt"
+	"log"
+	"strings"
+)
+
 // Query on top of a Graph instance
 // Aims to have "functional" style
 type Query struct {
@@ -19,6 +26,17 @@ func NewEmptyQuery() *Query {
 
 		Queries: map[string]*Query{},
 	}
+}
+
+// RenameKey returns the wanted key
+// if key == originalKey::newKey, return old key, new key
+func RenameKey(key string) (string, string) {
+	splitted := strings.Split(key, KEY_SEPARATOR)
+	if len(splitted) == 1 {
+		return splitted[0], splitted[0]
+	}
+
+	return splitted[0], splitted[1]
 }
 
 // NewQuery instanciates
@@ -187,6 +205,7 @@ func (q *Query) FilterNodes(predicate func(map[string]interface{}) bool) *Query 
 
 // Flatten function
 // Get an iterable of all the keys, per node
+// If key is formatted "originalKey::newKey", we rename the key
 func (q *Query) Save(keys ...string) *Query {
 
 	// Deep Calls
@@ -206,26 +225,16 @@ func (q *Query) Save(keys ...string) *Query {
 
 		// Loop over every key we care about
 		for _, key := range keys {
-			value, err := node.Get(key)
+			oldKey, newKey := RenameKey(key)
+			value, err := node.Get(oldKey)
 			if err != nil {
 				continue
 			}
-			q.Cache[nodeKey][key] = value
+			q.Cache[nodeKey][newKey] = value
 		}
 	}
 	return q
 }
-
-// // Output just returns the result
-// func (q *Query) Output() map[string]*Node {
-// 	copy := map[string]*Node{}
-//
-// 	for nodeKey, node := range q.result {
-// 		copy[nodeKey] = node.Copy()
-// 	}
-//
-// 	return copy
-// }
 
 // DeepenQuery creates a new DeepQuery, from every node of a given Query
 func (q *Query) Deepen() *Query {
@@ -260,7 +269,7 @@ func (q *Query) DeepSave(name string) *Query {
 	// If it's actually too deep, we keep going
 	if q.IsDoubleDeep() {
 		for _, nestedQuery := range q.Queries {
-			nestedQuery.Flatten()
+			nestedQuery.DeepSave(name)
 		}
 		return q
 	}
@@ -311,6 +320,7 @@ func (q *Query) DeepFilter(keepQuery func(*Query) bool) *Query {
 
 	// If it's actually too deep, we keep going
 	if q.IsDoubleDeep() {
+		log.Println("is double deep")
 		for _, nestedQuery := range q.Queries {
 			nestedQuery.DeepFilter(keepQuery)
 		}
@@ -337,4 +347,69 @@ func (q *Query) DeepFilter(keepQuery func(*Query) bool) *Query {
 	}
 
 	return q
+}
+
+// Return the cache value
+func (q *Query) Return() map[string](map[string]interface{}) {
+	return q.Cache
+}
+
+// Size returns how many nodes were found
+func (q *Query) Size() int {
+	return len(q.result)
+}
+
+func (q *Query) Log(msgs ...string) *Query {
+	for _, msg := range msgs {
+		fmt.Println(msg)
+	}
+
+	fmt.Println("> Cache")
+	q.LogCache()
+
+	fmt.Println("> Result")
+	q.LogResult()
+
+	fmt.Println("--- --- ---")
+
+	return q
+}
+
+func (q *Query) LogCache() *Query {
+
+	b, _ := json.MarshalIndent(q.Cache, "", "  ")
+	fmt.Println(string(b))
+
+	return q
+}
+
+func (q *Query) LogResult() *Query {
+
+	out := q.deepLog()
+
+	b, _ := json.MarshalIndent(out, "", "  ")
+	fmt.Println(string(b))
+	return q
+
+}
+
+// deepLog is called on a deep the first time
+func (q *Query) deepLog() map[string]interface{} {
+
+	if !q.IsDeep() {
+		result := map[string]interface{}{}
+		for nodeKey, _ := range q.result {
+			result[nodeKey] = ""
+		}
+		return result
+	}
+
+	// Otherwise modify tmp
+	result := map[string]interface{}{}
+	for nodeKey, nestedQuery := range q.Queries {
+		oneResult := nestedQuery.deepLog()
+		result[nodeKey] = oneResult
+	}
+	return result
+
 }
