@@ -196,12 +196,12 @@ func (q *Query) In(label string, rememberPath bool) *Query {
 }
 
 // FilterNodes based on a predicate on their properties
-func (q *Query) FilterNodes(predicate func(map[string]interface{}) bool) *Query {
+func (q *Query) Filter(predicate func(*Node, []*Step) bool) *Query {
 
 	// Deep Calls
 	if q.IsDeep {
 		for _, nestedQuery := range q.Queries {
-			nestedQuery.FilterNodes(predicate)
+			nestedQuery.Filter(predicate)
 		}
 		return q
 	}
@@ -211,7 +211,7 @@ func (q *Query) FilterNodes(predicate func(map[string]interface{}) bool) *Query 
 	// Loop over all the nodes in the current result
 	for nodeKey, node := range q.result {
 
-		if predicate(node.Props) {
+		if predicate(node, q.Path[nodeKey]) {
 			newResult[nodeKey] = node
 		}
 
