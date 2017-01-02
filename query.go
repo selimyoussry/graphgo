@@ -196,12 +196,12 @@ func (q *Query) In(label string, rememberPath bool) *Query {
 }
 
 // FilterNodes based on a predicate on their properties
-func (q *Query) Filter(predicate func(*Node, []*Step) bool) *Query {
+func (q *Query) ShallowFilter(predicate func(*Node, []*Step) bool) *Query {
 
 	// Deep Calls
 	if q.IsDeep {
 		for _, nestedQuery := range q.Queries {
-			nestedQuery.Filter(predicate)
+			nestedQuery.ShallowFilter(predicate)
 		}
 		return q
 	}
