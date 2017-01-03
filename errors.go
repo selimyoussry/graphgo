@@ -1,22 +1,33 @@
 package graphgo
 
-import (
-	"errors"
-	"fmt"
-)
+import "github.com/hippoai/goerr"
 
+// errNodeNotFound when a node is not found in the graph, given its key
 func errNodeNotFound(key string) error {
-	return errors.New(fmt.Sprintf("Could not find node %s", key))
+	return goerr.New(ERR_NODE_NOT_FOUND, map[string]interface{}{
+		"key": key,
+	})
 }
 
+// errEdgeNotFound when an edge is not found in the graph, given its key
 func errEdgeNotFound(key string) error {
-	return errors.New(fmt.Sprintf("Could not find edge %s", key))
+	return goerr.New(ERR_EDGE_NOT_FOUND, map[string]interface{}{
+		"key": key,
+	})
 }
 
-func errorNodePropNotFound(nodeKey, key string) error {
-	return errors.New(fmt.Sprintf("Could not find node (%s)'s' property %s", nodeKey, key))
+// errorNodePropNotFound when a property is not found on a node
+func errorNodePropNotFound(nodeKey, prop string) error {
+	return goerr.New(ERR_NODE_PROP_NOT_FOUND, map[string]interface{}{
+		"nodeKey": nodeKey,
+		"prop":    prop,
+	})
 }
 
-func errorEdgePropNotFound(nodeKey, key string) error {
-	return errors.New(fmt.Sprintf("Could not find node (%s)'s' property %s", nodeKey, key))
+// errorEdgePropNotFound when a property is not found on a node
+func errorEdgePropNotFound(edgeKey, prop string) error {
+	return goerr.New(ERR_EDGE_PROP_NOT_FOUND, map[string]interface{}{
+		"edgeKey": edgeKey,
+		"prop":    prop,
+	})
 }

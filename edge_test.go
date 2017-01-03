@@ -21,12 +21,12 @@ func TestEdge(t *testing.T) {
 	}
 	g.MergeNode("node.2", node2Props)
 
-	node1, err := g.GetNode("node.1")
+	node1, err := g.getNode("node.1")
 	if err != nil {
 		t.Errorf("Could not find node1")
 	}
 
-	node2, err := g.GetNode("node.2")
+	node2, err := g.getNode("node.2")
 	if err != nil {
 		t.Errorf("Could not find node2")
 	}
@@ -41,7 +41,7 @@ func TestEdge(t *testing.T) {
 	node1.SetProperty("prop2", "world")
 
 	// Find the edge
-	edge, err := g.GetEdge("a.b")
+	edge, err := g.getEdge("a.b")
 	if err != nil {
 		t.Errorf("Could not find edge")
 	}
@@ -67,8 +67,8 @@ func TestEdge(t *testing.T) {
 		t.Errorf("Update of node prop %s is not propagated", "prop3")
 	}
 
-	out, err := json.Marshal(g)
-	if err != nil {
+	out, err2 := json.Marshal(g)
+	if err2 != nil {
 		t.Errorf("Could not marshal the graph")
 	}
 	t.Logf(string(out))
