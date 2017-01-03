@@ -1,10 +1,41 @@
 # Graphgo
 
-Implements a **directed property graph**, along with a [Gremlin](https://tinkerpop.apache.org) like query language, in [Go](https://golang.org).
+Implements standard interfaces for libraries working on directed property graph. It also comes with a simple implementation of directed property graph, compatible with these interfaces. It is compatible with the traversal library [AskGo](https://github.com/hippoai/askgo.git).
 
 ## Concepts
 
 The graph is a collection of nodes and edges. Each node and edge is identified by a unique key, which helps us retrieve them in the graph. The graph essentially maintains a nodes map `map[string]*Node` and an edges map `map[string]*Edge`, using the node and edge keys as map keys.
+
+The standard interfaces mentioned above are the following:
+
+```go
+// Graph needs to be able to find a node and an edge given their key
+type IGraph interface {
+	GetNode(key string) (INode, error)
+	GetEdge(key string) (IEdge, error)
+}
+
+// Edge needs to be able to access its properties, start and end node, and label
+// it has a unique key
+type IEdge interface {
+	Get(key string) (interface{}, error)
+	Hop(graph IGraph, key string) (INode, error)
+	StartN(graph IGraph) (INode, error)
+	EndN(graph IGraph) (INode, error)
+	GetLabel() string
+	GetKey() string
+}
+
+// Node needs to be able to access its properties,
+// ingoing and outgoing edges
+// it has a unique key
+type INode interface {
+	Get(key string) (interface{}, error)
+	InE(graph IGraph, label string) (map[string]IEdge, error)
+	OutE(graph IGraph, label string) (map[string]IEdge, error)
+	GetKey() string
+}
+```
 
 ## Install
 
@@ -14,7 +45,7 @@ The graph is a collection of nodes and edges. Each node and edge is identified b
 
 Below, we list a few code snippets and use cases for this package. Make sure you import this package `import "github.com/hippoai/graphgo"`.
 
-### 1. Create a graph
+### Create a graph and add a bunch of nodes and edges
 
 ```go
 // Instanciate an empty graph
@@ -54,197 +85,5 @@ g.MergeEdge(
 )
 ```
 
-### 2 - Query the graph
-
-Graphs are great to store relational data, because they provide an efficient data structure to explore these relationships. Asking questions to `graphgo`'s graphs is done using the `Query` structure, that wraps around the graph. The result will be stored in a nested object that will be built during the query (check the following examples to sense what's going on).
-
-Let's create a new query, starting at the node "company.ups".
-```go
-query := graphgo.NewQuery(g, "company.ups")
-```
-
-Now, let's answer a few questions.
-
-#### What are the names and ages of the people working for UPS?
-```go
-result := query.
-  In("WORKS_IN").
-  Save("name", "age").
-  Return()
-```
- will return
- ```javascript
-{
-  "person.john": {
-    "name": "john",
-    "age": 55
-  },
-  "person.patrick": {
-    "name": "patrick",
-    "age": 20
-  }
-}
- ```
-
-#### What are the names and age of the UPS employees who have a son? Oh, and give me the son's name too.
-
-Steps:
-* Get all UPS employees
-* Create a "Deep query" on this result, which will allow us to filter based on the employees properties and relationships (find the ones with a son).
-* Save the son's name
-* Return the fathers' names and ages.
-
-```go
-// Determine whether you have a son
-exists := func (q * graphgo.Query) bool{
-  return q.Size() > 0
-}
-
-result := query.
-  In("WORKS_IN"). // Find the employees
-  Deepen(). // Deep query
-  In("IS_SON_OF"). // For each employee, get the sons
-  Deepen(). // For each son, check if he works at UPS
-  Out("WORKS_IN"). // Get the companies they work for
-  DeepFilter(exists). // only keep the sons working for a company
-  Flatten(). // return to the son level
-  DeepFilter(exists). // Filter the ones with no son
-  Save("name"). // Save the son's name in the deep cache
-  DeepSave("sons"). // Save in the cache, under "sons" key
-  Flatten(). // Return at the lower level
-  Save("name", "age"). // Save the father's age
-  Return()
-```
-
-will return
-
-```javascript
-{
-  "person.john": {
-    "age": 55,
-    "name": "john",
-    "sons": {
-      "person.patrick": {
-        "name": "patrick"
-      }
-    }
-  }
-}
-```
-
-#### Let us add another son and run the same query.
-
-For this, we will first add a few nodes and relationships to the graph.
-
-```go
-g.MergeNode("person.tim", map[string]interface{}{
-  "name": "Tim",
-  "age":  28,
-})
-
-g.MergeEdge(
-  "tim.is_son_of.john", "IS_SON_OF",
-  "person.tim", "person.john",
-  map[string]interface{}{},
-)
-```
-
-we get
-
-```javascript
-{
-  "person.john": {
-    "age": 55,
-    "name": "john",
-    "sons": {
-      "person.patrick": {
-        "name": "patrick"
-      },
-      "person.tim": {
-        "name": "Tim"
-      }
-    }
-  }
-}
-```
-
-#### Now we only want the sons who also work at UPS, so we need to add another filter somewhere.
-
-```golang
-result := query.
-  Log("0. Start").
-  In("WORKS_IN"). // Find the employees
-  Log("1. Employees").
-  Deepen(). // Deep query
-  Log("1.55 Deepened").
-  In("IS_SON_OF"). // For each employee, get the sons
-  Log("1.6 Sons before filtering").
-  DeepFilter(exists). // filter sons
-  Log("1.7 Filter guys who have sons").
-  Deepen(). // Deepen filter sons working at UPS
-  Log("1.8 second depth").
-  Out("WORKS_IN"). // get companies they work for
-  Log("1.9 second depth > companies").
-  DeepFilter(exists). // keep only sons who work for a company
-  Log("1.95 second filter").
-  Flatten().
-  Save("name::sonName"). // son name
-  DeepSave("sons").
-  Log("2. Sons").
-  Flatten().
-  Log("3. Flattened").
-  Save("name::fatherName").
-  Log("1.5 Father name").
-  Return()
-```
-
-
-### Yo
-
-We will run queries on top of a graph. Its purpose is to store data. In order for the query engine (the AskGo library) to answer your question, the graph needs to implement the `askgo.Graph` interface. I.e. it needs the following methods:
-
-```go
-// GetEdge returns a pointer to an Edge, given its unique key, and an error if it could not be found
-GetEdge(key string) (askgo.Edge, error)
-
-// GetNode returns a pointer to a Node, given its unique key, and an error if it could not be found
-GetNode(key string) (askgo.Node, error)
-```
-
-where `askgo.Edge` implements
-
-```go
-// Get returns a property, given its key, and an error if it could not be found
-Get(key string) (interface{}, error)
-
-// Start returns the start node
-StartN(graph askgo.Graph) (askgo.Node, error)
-
-// End returns the end node
-EndN(graph askgo.Graph) (askgo.Node, error)
-
-// Hop returns either the start or end node
-Hop(graph askgo.Graph, key string) (askgo.Node, error)
-
-// Label returns the edge label
-GetLabel() string
-
-// Key returns the key
-GetKey() string
-```
-
-and `askgo.Node` implements the following interface
-
-```go
-// Get returns a property, given its key, and an error if it could not be found
-Get(key string) (interface{}, error)
-
-// InE returns a map of outgoing edges with the given label, indexed by their key
-InE(g askgo.Graph, label string) (map[string]askgo.Edge, error)
-
-// OutE returns a map of outgoing edges with the given label, indexed by their key
-OutE(g askgo.Graph, label string) (map[string]askgo.Edge, error)
-
-// Key returns the key
-GetKey() string
-```
+### Once you've got your graph, traverse it
+with [AskGo](https://github.com/hippoai/askgo.git)
