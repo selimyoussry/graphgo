@@ -1,3 +1,5 @@
+// Package graphgo implements standard interfaces for libraries working on directed property graphs (see interfaces.go)
+// It also provides a simple implementation for a directed property graph, compatible with these interfaces
 package graphgo
 
 // Graph stores nodes and edges in maps, using their unique keys
