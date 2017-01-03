@@ -12,7 +12,7 @@ func TestAddNode(t *testing.T) {
 	}
 	g.MergeNode("node.1", nodeProps)
 
-	node, err := g.GetNode("node.1")
+	node, err := g.getNode("node.1")
 	if err != nil {
 		t.Errorf(err.Error())
 	}

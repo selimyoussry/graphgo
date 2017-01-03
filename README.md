@@ -197,3 +197,54 @@ result := query.
   Log("1.5 Father name").
   Return()
 ```
+
+
+### Yo
+
+We will run queries on top of a graph. Its purpose is to store data. In order for the query engine (the AskGo library) to answer your question, the graph needs to implement the `askgo.Graph` interface. I.e. it needs the following methods:
+
+```go
+// GetEdge returns a pointer to an Edge, given its unique key, and an error if it could not be found
+GetEdge(key string) (askgo.Edge, error)
+
+// GetNode returns a pointer to a Node, given its unique key, and an error if it could not be found
+GetNode(key string) (askgo.Node, error)
+```
+
+where `askgo.Edge` implements
+
+```go
+// Get returns a property, given its key, and an error if it could not be found
+Get(key string) (interface{}, error)
+
+// Start returns the start node
+StartN(graph askgo.Graph) (askgo.Node, error)
+
+// End returns the end node
+EndN(graph askgo.Graph) (askgo.Node, error)
+
+// Hop returns either the start or end node
+Hop(graph askgo.Graph, key string) (askgo.Node, error)
+
+// Label returns the edge label
+GetLabel() string
+
+// Key returns the key
+GetKey() string
+```
+
+and `askgo.Node` implements the following interface
+
+```go
+// Get returns a property, given its key, and an error if it could not be found
+Get(key string) (interface{}, error)
+
+// InE returns a map of outgoing edges with the given label, indexed by their key
+InE(g askgo.Graph, label string) (map[string]askgo.Edge, error)
+
+// OutE returns a map of outgoing edges with the given label, indexed by their key
+OutE(g askgo.Graph, label string) (map[string]askgo.Edge, error)
+
+// Key returns the key
+GetKey() string
+```

@@ -1,5 +1,7 @@
 package graphgo
 
+import "github.com/hippoai/goerr"
+
 // Node implements a graph node
 type Node struct {
 	Key   string                 `json:"key"`
@@ -71,4 +73,75 @@ func (node *Node) Copy() *Node {
 		Out:   out,
 		In:    in,
 	}
+}
+
+// InE returns the incoming edges
+func (node *Node) InE(graph IGraph, label string) (map[string]IEdge, error) {
+
+	result := map[string]IEdge{}
+	missingEdges := []string{}
+
+	// Loop over the edges
+	for edgeKey, edgeLabel := range node.In {
+		if edgeLabel != label {
+			continue
+		}
+
+		edge, err := graph.GetEdge(edgeKey)
+		if err != nil {
+			missingEdges = append(missingEdges, edgeKey)
+			continue
+		}
+
+		result[edge.GetKey()] = edge
+
+	}
+
+	// Return the result, along with missing edges
+	if len(missingEdges) > 0 {
+		return result, goerr.New(ERR_NODE_INE_MISSING_EDGES, map[string]interface{}{
+			"missingEdges": missingEdges,
+			"nodeKey":      node.Key,
+		})
+	}
+
+	return result, nil
+}
+
+// OutE returns the outgoing edges
+func (node *Node) OutE(graph IGraph, label string) (map[string]IEdge, error) {
+
+	result := map[string]IEdge{}
+	missingEdges := []string{}
+
+	// Loop over the edges
+	for edgeKey, edgeLabel := range node.Out {
+		if edgeLabel != label {
+			continue
+		}
+
+		edge, err := graph.GetEdge(edgeKey)
+		if err != nil {
+			missingEdges = append(missingEdges, edgeKey)
+			continue
+		}
+
+		result[edge.GetKey()] = edge
+
+	}
+
+	// Return the result, along with missing edges
+	if len(missingEdges) > 0 {
+		return result, goerr.New(ERR_NODE_OUTE_MISSING_EDGES, map[string]interface{}{
+			"missingEdges": missingEdges,
+			"nodeKey":      node.Key,
+		})
+	}
+
+	return result, nil
+}
+
+// GetKey returns the key, to implement askgo interface
+func (node *Node) GetKey() string {
+	return node.Key
 }

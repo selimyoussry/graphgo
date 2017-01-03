@@ -34,3 +34,40 @@ func (edge *Edge) Get(key string) (interface{}, error) {
 
 	return value, nil
 }
+
+// Hop returns the other node
+func (edge *Edge) Hop(graph IGraph, key string) (INode, error) {
+
+	otherNodeKey := edge.Start
+	if otherNodeKey == key {
+		otherNodeKey = edge.End
+	}
+
+	node, err := graph.GetNode(otherNodeKey)
+	if err != nil {
+		return nil, err
+	}
+
+	return node, nil
+
+}
+
+// StartN returns the start node
+func (edge *Edge) StartN(graph IGraph) (INode, error) {
+	return edge.Hop(graph, edge.End)
+}
+
+// EndN returns the end node
+func (edge *Edge) EndN(graph IGraph) (INode, error) {
+	return edge.Hop(graph, edge.Start)
+}
+
+// GetLabel returns the label
+func (edge *Edge) GetLabel() string {
+	return edge.Label
+}
+
+// GetKey returns the key
+func (edge *Edge) GetKey() string {
+	return edge.Key
+}
