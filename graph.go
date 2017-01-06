@@ -144,6 +144,16 @@ func (graph *Graph) DeleteNode(nodeKey string) error {
 	return nil
 }
 
+// DeleteNodeFromLegacyIndex
+func (graph *Graph) DeleteNodeFromLegacyIndex(legacyNodeKey string) error {
+	nodeKey, err := graph.FindNodeFromLegacyIndex(legacyNodeKey)
+	if err != nil {
+		return err
+	}
+
+	return graph.DeleteNode(nodeKey)
+}
+
 // DeleteEdge
 func (graph *Graph) DeleteEdge(edgeKey string) error {
 	// if the edge does not exist, don't bother
@@ -167,4 +177,14 @@ func (graph *Graph) DeleteEdge(edgeKey string) error {
 	// Delete the edge
 	delete(graph.Edges, edgeKey)
 	return nil
+}
+
+// DeleteNodeFromLegacyIndex
+func (graph *Graph) DeleteEdgeFromLegacyIndex(legacyNodeKey string) error {
+	edgeKey, err := graph.FindEdgeFromLegacyIndex(legacyNodeKey)
+	if err != nil {
+		return err
+	}
+
+	return graph.DeleteEdge(edgeKey)
 }

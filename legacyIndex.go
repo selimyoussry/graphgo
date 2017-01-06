@@ -30,3 +30,27 @@ func (graph *Graph) AddEdgeIndex(legacyIndex, index string) {
 	graph.LegacyIndex.Edges[li] = index
 	graph.LegacyIndex.Edges[index] = li
 }
+
+// FindNodeFromLegacy
+func (graph *Graph) FindNodeFromLegacyIndex(legacyIndex string) (string, error) {
+
+	li := fmt.Sprintf("legacy.%s", legacyIndex)
+	nodeKey, ok := graph.LegacyIndex.Nodes[li]
+	if !ok {
+		return "", errNoNodeLegacyRecord(legacyIndex)
+	}
+
+	return nodeKey, nil
+}
+
+// FindEdgeFromLegacyIndex
+func (graph *Graph) FindEdgeFromLegacyIndex(legacyIndex string) (string, error) {
+
+	li := fmt.Sprintf("legacy.%s", legacyIndex)
+	edgeKey, ok := graph.LegacyIndex.Edges[li]
+	if !ok {
+		return "", errNoEdgeLegacyRecord(legacyIndex)
+	}
+
+	return edgeKey, nil
+}
