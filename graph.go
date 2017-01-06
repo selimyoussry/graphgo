@@ -4,15 +4,17 @@ package graphgo
 
 // Graph stores nodes and edges in maps, using their unique keys
 type Graph struct {
-	Nodes map[string]*Node `json:"nodes"`
-	Edges map[string]*Edge `json:"edges"`
+	Nodes       map[string]*Node `json:"nodes"`
+	Edges       map[string]*Edge `json:"edges"`
+	LegacyIndex *LegacyIndex     `json:"legacyIndex"`
 }
 
 // NewEmptyGraph instanciates
 func NewEmptyGraph() *Graph {
 	return &Graph{
-		Nodes: map[string]*Node{},
-		Edges: map[string]*Edge{},
+		Nodes:       map[string]*Node{},
+		Edges:       map[string]*Edge{},
+		LegacyIndex: NewLegacyIndex(),
 	}
 }
 
@@ -122,4 +124,47 @@ func (graph *Graph) MergeEdge(edgeKey, label string, start, end string, props ma
 	}
 
 	return edge, nil
+}
+
+// DeleteNode
+func (graph *Graph) DeleteNode(nodeKey string) error {
+	// if the node does not exist, don't bother
+	node, err := graph.getNode(nodeKey)
+	if err != nil {
+		return nil
+	}
+
+	// if the node still has relationships, we can't delete it
+	if (len(node.In) > 0) || (len(node.Out) > 0) {
+		return errConnectedNode(nodeKey)
+	}
+
+	// otherwise delete the node
+	delete(graph.Nodes, nodeKey)
+	return nil
+}
+
+// DeleteEdge
+func (graph *Graph) DeleteEdge(edgeKey string) error {
+	// if the edge does not exist, don't bother
+	edge, err := graph.getEdge(edgeKey)
+	if err != nil {
+		return nil
+	}
+
+	// Remove the edge key from the start node
+	startNode, err := graph.getNode(edge.Start)
+	if err == nil {
+		delete(startNode.Out, edgeKey)
+	}
+
+	// Remove the edge key from the end node
+	endNode, err := graph.getNode(edge.End)
+	if err == nil {
+		delete(endNode.In, edgeKey)
+	}
+
+	// Delete the edge
+	delete(graph.Edges, edgeKey)
+	return nil
 }

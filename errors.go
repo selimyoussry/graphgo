@@ -31,3 +31,9 @@ func errorEdgePropNotFound(edgeKey, prop string) error {
 		"prop":    prop,
 	})
 }
+
+func errConnectedNode(nodeKey string) error {
+	return goerr.New(ERR_CONNECTED_NODE, map[string]interface{}{
+		"nodeKey": nodeKey,
+	})
+}
