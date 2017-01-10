@@ -18,14 +18,14 @@ func NewLegacyIndex() *LegacyIndex {
 }
 
 // AddNodeIndex
-func (graph *Graph) AddNodeIndex(legacyIndex, index string) {
+func (graph *Graph) AddNodeLegacyIndex(legacyIndex, index string) {
 	li := fmt.Sprintf("legacy.%s", legacyIndex)
 	graph.LegacyIndex.Nodes[li] = index
 	graph.LegacyIndex.Nodes[index] = li
 }
 
 // AddEdgeIndex
-func (graph *Graph) AddEdgeIndex(legacyIndex, index string) {
+func (graph *Graph) AddEdgeLegacyIndex(legacyIndex, index string) {
 	li := fmt.Sprintf("legacy.%s", legacyIndex)
 	graph.LegacyIndex.Edges[li] = index
 	graph.LegacyIndex.Edges[index] = li
