@@ -31,3 +31,21 @@ func errorEdgePropNotFound(edgeKey, prop string) error {
 		"prop":    prop,
 	})
 }
+
+func errConnectedNode(nodeKey string) error {
+	return goerr.New(ERR_CONNECTED_NODE, map[string]interface{}{
+		"nodeKey": nodeKey,
+	})
+}
+
+func errNoNodeLegacyRecord(nodeKey string) error {
+	return goerr.New(ERR_NO_NODE_LEGACY_RECORD, map[string]interface{}{
+		"nodeKey": nodeKey,
+	})
+}
+
+func errNoEdgeLegacyRecord(edgeKey string) error {
+	return goerr.New(ERR_NO_EDGE_LEGACY_RECORD, map[string]interface{}{
+		"edgeKey": edgeKey,
+	})
+}
