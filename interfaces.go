@@ -15,6 +15,7 @@ type IEdge interface {
 	EndN(graph IGraph) (INode, error)
 	GetLabel() string
 	GetKey() string
+	GetProps() map[string]interface{}
 }
 
 // Node needs to be able to access its properties,
@@ -25,4 +26,5 @@ type INode interface {
 	InE(graph IGraph, label string) (map[string]IEdge, error)
 	OutE(graph IGraph, label string) (map[string]IEdge, error)
 	GetKey() string
+	GetProps() map[string]interface{}
 }

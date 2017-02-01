@@ -71,3 +71,8 @@ func (edge *Edge) GetLabel() string {
 func (edge *Edge) GetKey() string {
 	return edge.Key
 }
+
+// GetProps returns all properties
+func (edge *Edge) GetProps() map[string]interface{} {
+	return edge.Props
+}
