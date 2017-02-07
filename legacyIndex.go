@@ -54,3 +54,29 @@ func (graph *Graph) FindEdgeFromLegacyIndex(legacyIndex string) (string, error) 
 
 	return edgeKey, nil
 }
+
+// DeleteNodeFromLegacyIndex
+func (graph *Graph) DeleteNodeFromLegacyIndex(legacyNodeKey string) error {
+	nodeKey, err := graph.FindNodeFromLegacyIndex(legacyNodeKey)
+	if err != nil {
+		return err
+	}
+
+	li := fmt.Sprintf("legacy.%s", legacyNodeKey)
+	delete(graph.LegacyIndex.Nodes, li)
+	delete(graph.LegacyIndex.Nodes, nodeKey)
+	return graph.DeleteNode(nodeKey)
+}
+
+// DeleteEdgeFromLegacyIndex
+func (graph *Graph) DeleteEdgeFromLegacyIndex(legacyEdgeKey string) error {
+	edgeKey, err := graph.FindEdgeFromLegacyIndex(legacyEdgeKey)
+	if err != nil {
+		return err
+	}
+
+	li := fmt.Sprintf("legacy.%s", legacyEdgeKey)
+	delete(graph.LegacyIndex.Edges, li)
+	delete(graph.LegacyIndex.Edges, edgeKey)
+	return graph.DeleteEdge(edgeKey)
+}
