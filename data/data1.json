@@ -1,0 +1,148 @@
+{
+  "$merge": {
+    "nodes": {
+      "company.OnePlus": {
+        "key": "company.OnePlus",
+        "props": {
+          "name": "OnePlus",
+          "location": "america"
+        }
+      },
+      "person.patrick": {
+        "key": "person.patrick",
+        "props": {
+          "name": "patrick",
+          "age": 20
+        }
+      },
+      "person.tim": {
+        "key": "person.tim",
+        "props": {
+          "name": "Tim",
+          "age": 48
+        }
+      },
+      "person.clara": {
+        "key": "person.clara",
+        "props": {
+          "name": "Clara",
+          "age": 18
+        }
+      },
+      "person.jimbo": {
+        "key": "person.jimbo",
+        "props": {
+          "name": "Jimbo",
+          "age": 20
+        }
+      },
+      "person.john": {
+        "key": "person.john",
+        "props": {
+          "name": "john",
+          "age": 55
+        }
+      },
+      "person.elliott": {
+        "key": "person.elliott",
+        "props": {
+          "name": "elliott",
+          "age": 80
+        }
+      }
+    },
+    "edges": {
+      "patrick.worksin.OnePlus": {
+        "key": "patrick.worksin.OnePlus",
+        "label": "WORKS_IN",
+        "start": "person.patrick",
+        "end": "company.OnePlus",
+        "props": {}
+      },
+      "john.worksin.OnePlus": {
+        "key": "john.worksin.OnePlus",
+        "label": "WORKS_IN",
+        "start": "person.john",
+        "end": "company.OnePlus",
+        "props": {}
+      },
+      "tim.worksin.OnePlus": {
+        "key": "tim.worksin.OnePlus",
+        "label": "WORKS_IN",
+        "start": "person.tim",
+        "end": "company.OnePlus",
+        "props": {}
+      },
+      "clara.worksin.OnePlus": {
+        "key": "clara.worksin.OnePlus",
+        "label": "WORKS_IN",
+        "start": "person.clara",
+        "end": "company.OnePlus",
+        "props": {}
+      },
+      "jimbo.worksin.OnePlus": {
+        "key": "jimbo.worksin.OnePlus",
+        "label": "WORKS_IN",
+        "start": "person.jimbo",
+        "end": "company.OnePlus",
+        "props": {}
+      },
+      "john.is_father_of.patrick": {
+        "key": "john.is_father_of.patrick",
+        "label": "IS_FATHER_OF",
+        "start": "person.john",
+        "end": "person.patrick",
+        "props": {}
+      },
+      "tim.is_father_of.clara": {
+        "key": "tim.is_father_of.clara",
+        "label": "IS_FATHER_OF",
+        "start": "person.tim",
+        "end": "person.clara",
+        "props": {}
+      },
+      "tim.is_father_of.jimbo": {
+        "key": "tim.is_father_of.jimbo",
+        "label": "IS_FATHER_OF",
+        "start": "person.tim",
+        "end": "person.jimbo",
+        "props": {}
+      },
+      "elliott.is_father_of.john": {
+        "key": "elliott.is_father_of.john",
+        "label": "IS_FATHER_OF",
+        "start": "person.elliott",
+        "end": "person.john",
+        "props": {}
+      }
+    },
+    "legacyIndex": {
+      "nodes": {
+        "1": "company.OnePlus",
+        "2": "person.patrick",
+        "3": "person.tim",
+        "4": "person.clara",
+        "5": "person.jimbo",
+        "6": "person.john",
+        "7": "person.elliott"
+      },
+      "edges": {
+        "1": "patrick.worksin.OnePlus",
+        "2": "john.worksin.OnePlus",
+        "3": "tim.worksin.OnePlus",
+        "4": "clara.worksin.OnePlus",
+        "5": "jimbo.worksin.OnePlus",
+        "6": "john.is_father_of.patrick",
+        "7": "tim.is_father_of.clara",
+        "8": "tim.is_father_of.jimbo",
+        "9": "elliott.is_father_of.john"
+      }
+    }
+  },
+  "$delete": {
+    "nodes": [],
+    "edges": [],
+    "legacyNodes": [],
+    "legacyEdges": []
+  }
+}

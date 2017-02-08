@@ -27,6 +27,12 @@ func (graph *Graph) getNode(key string) (*Node, error) {
 	return node, nil
 }
 
+// HasNode
+func (graph *Graph) HasNode(key string) bool {
+	_, ok := graph.Nodes[key]
+	return ok
+}
+
 // GetNode finds a node given its key
 func (graph *Graph) GetNode(key string) (INode, error) {
 	return graph.getNode(key)
@@ -39,6 +45,14 @@ func (graph *Graph) GetNodeProp(key, prop string) (interface{}, error) {
 		return "", err
 	}
 	return node.Get(prop)
+}
+
+func (graph *Graph) GetNodeProps(key string) (map[string]interface{}, error) {
+	node, err := graph.getNode(key)
+	if err != nil {
+		return map[string]interface{}{}, err
+	}
+	return node.Props, nil
 }
 
 // MergeNode adds a node to the graph if it does not exist, or merges its properties ottherwise
@@ -73,6 +87,12 @@ func (graph *Graph) getEdge(key string) (*Edge, error) {
 		return nil, errEdgeNotFound(key)
 	}
 	return edge, nil
+}
+
+// HasEdge
+func (graph *Graph) HasEdge(key string) bool {
+	_, ok := graph.Edges[key]
+	return ok
 }
 
 // GetEdge gets an existing edge or returns an error
@@ -128,30 +148,8 @@ func (graph *Graph) MergeEdge(edgeKey, label string, start, end string, props ma
 
 // DeleteNode
 func (graph *Graph) DeleteNode(nodeKey string) error {
-	// if the node does not exist, don't bother
-	node, err := graph.getNode(nodeKey)
-	if err != nil {
-		return nil
-	}
-
-	// if the node still has relationships, we can't delete it
-	if (len(node.In) > 0) || (len(node.Out) > 0) {
-		return errConnectedNode(nodeKey)
-	}
-
-	// otherwise delete the node
 	delete(graph.Nodes, nodeKey)
 	return nil
-}
-
-// DeleteNodeFromLegacyIndex
-func (graph *Graph) DeleteNodeFromLegacyIndex(legacyNodeKey string) error {
-	nodeKey, err := graph.FindNodeFromLegacyIndex(legacyNodeKey)
-	if err != nil {
-		return err
-	}
-
-	return graph.DeleteNode(nodeKey)
 }
 
 // DeleteEdge
@@ -177,14 +175,4 @@ func (graph *Graph) DeleteEdge(edgeKey string) error {
 	// Delete the edge
 	delete(graph.Edges, edgeKey)
 	return nil
-}
-
-// DeleteNodeFromLegacyIndex
-func (graph *Graph) DeleteEdgeFromLegacyIndex(legacyNodeKey string) error {
-	edgeKey, err := graph.FindEdgeFromLegacyIndex(legacyNodeKey)
-	if err != nil {
-		return err
-	}
-
-	return graph.DeleteEdge(edgeKey)
 }
