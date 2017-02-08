@@ -145,3 +145,8 @@ func (node *Node) OutE(graph IGraph, label string) (map[string]IEdge, error) {
 func (node *Node) GetKey() string {
 	return node.Key
 }
+
+// GetProps
+func (node *Node) GetProps() map[string]interface{} {
+	return node.Props
+}
