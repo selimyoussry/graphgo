@@ -146,7 +146,7 @@ func (node *Node) GetKey() string {
 	return node.Key
 }
 
-// GetProps
+// GetProps returns all properties
 func (node *Node) GetProps() map[string]interface{} {
 	return node.Props
 }
