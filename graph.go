@@ -34,7 +34,7 @@ func (graph *Graph) HasNode(key string) bool {
 }
 
 // GetNode finds a node given its key
-func (graph *Graph) GetNode(key string) (INode, error) {
+func (graph *Graph) GetNode(key string) (*Node, error) {
 	return graph.getNode(key)
 }
 
@@ -96,7 +96,7 @@ func (graph *Graph) HasEdge(key string) bool {
 }
 
 // GetEdge gets an existing edge or returns an error
-func (graph *Graph) GetEdge(key string) (IEdge, error) {
+func (graph *Graph) GetEdge(key string) (*Edge, error) {
 	return graph.getEdge(key)
 }
 
