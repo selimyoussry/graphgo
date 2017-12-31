@@ -36,7 +36,7 @@ func (edge *Edge) Get(key string) (interface{}, error) {
 }
 
 // Hop returns the other node
-func (edge *Edge) Hop(graph IGraph, key string) (INode, error) {
+func (edge *Edge) Hop(graph *Graph, key string) (*Node, error) {
 
 	otherNodeKey := edge.Start
 	if otherNodeKey == key {
@@ -53,12 +53,12 @@ func (edge *Edge) Hop(graph IGraph, key string) (INode, error) {
 }
 
 // StartN returns the start node
-func (edge *Edge) StartN(graph IGraph) (INode, error) {
+func (edge *Edge) StartN(graph *Graph) (*Node, error) {
 	return edge.Hop(graph, edge.End)
 }
 
 // EndN returns the end node
-func (edge *Edge) EndN(graph IGraph) (INode, error) {
+func (edge *Edge) EndN(graph *Graph) (*Node, error) {
 	return edge.Hop(graph, edge.Start)
 }
 
